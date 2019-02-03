@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -78,9 +79,50 @@ namespace AlternativeSourcesKeyProvider
         }
     }
 
-    public class PassphraseSourceFactory
+    public abstract class SourceFactoryBase
     {
-        public static KdfParameters GetBestKdfParameters(uint miliseconds = 1000)
+        protected byte[] EncryptSecret(ProtectedBinary secret, ProtectedBinary key, out byte[] iv)
+        {
+            iv = CryptoRandom.Instance.GetRandomBytes(16); // AES 256 uses 128bits blocks
+            using (var ms = new MemoryStream())
+            {
+                using (var encryptionStream = new StandardAesEngine().EncryptStream(ms, key.ReadData(), iv))
+                {
+                    MemUtil.Write(encryptionStream, secret.ReadData());
+                }
+                return ms.ToArray();
+            }
+        }
+
+        protected ProtectedBinary DecryptSecret(byte[] encryptedSecret, ProtectedBinary key, byte[] iv)
+        {
+            using (var ms = new MemoryStream(encryptedSecret))
+            using (var decryptionStream = new StandardAesEngine().DecryptStream(ms, key.ReadData(), iv))
+            {
+                return new ProtectedBinary(true, ReadToEnd(decryptionStream));
+            }
+        }
+
+        protected byte[] ReadToEnd(Stream stream)
+        {
+            var buffer = new byte[32768];
+            using (var ms = new MemoryStream())
+            {
+                while (true)
+                {
+                    int read = stream.Read(buffer, 0, buffer.Length);
+                    if (read <= 0)
+                        return ms.ToArray();
+                    else
+                        ms.Write(buffer, 0, read);
+                }
+            }
+        }
+    }
+
+    public class PassphraseSourceFactory : SourceFactoryBase
+    {
+        public KdfParameters GetBestKdfParameters(uint miliseconds = 1000)
         {
             var kdf = new AesKdf();
             var p = kdf.GetBestParameters(miliseconds);
@@ -88,7 +130,7 @@ namespace AlternativeSourcesKeyProvider
             return p;
         }
 
-        public static KdfParameters CreateKdfParameters(ulong? rounds = null)
+        public KdfParameters CreateKdfParameters(ulong? rounds = null)
         {
             var kdf = new AesKdf();
             var p = kdf.GetDefaultParameters();
@@ -108,7 +150,7 @@ namespace AlternativeSourcesKeyProvider
             return derivedKey;
         }
 
-        public static PassphraseSource GeneratePassphraseSource(
+        public PassphraseSource GeneratePassphraseSource(
             string friendlyName,
             ProtectedString passphrase,
             KdfParameters kdfParameters,
@@ -118,22 +160,13 @@ namespace AlternativeSourcesKeyProvider
             var derivedKey = DerivePassphrase(passphrase, kdfParameters);
 
             // Encrypt the secret with the derived key
-            byte[] encryptedSecretBytes;
-            var iv = CryptoRandom.Instance.GetRandomBytes(16); // AES 256 uses 128bits blocks
-            using (var ms = new MemoryStream())
-            {
-                using (var encryptionStream = new StandardAesEngine().EncryptStream(ms, derivedKey.ReadData(), iv))
-                {
-                    MemUtil.Write(encryptionStream, secret.ReadData());
-                }
-                encryptedSecretBytes = ms.ToArray();
-            }
+            var encryptedSecretBytes = EncryptSecret(secret, derivedKey, out var iv);
 
             var result = new PassphraseSource(friendlyName, encryptedSecretBytes, iv, kdfParameters);
             return result;
         }
 
-        public static ProtectedBinary DecryptSecret(PassphraseSource passphraseSource, ProtectedString passphrase)
+        public ProtectedBinary DecryptSecret(PassphraseSource passphraseSource, ProtectedString passphrase)
         {
             // Read parameters
             var kdfParameters = passphraseSource.DeserializeKdfParameters();
@@ -142,35 +175,106 @@ namespace AlternativeSourcesKeyProvider
             var derivedKey = DerivePassphrase(passphrase, kdfParameters);
 
             // Deccrypt the secret with the derived key
-            ProtectedBinary decryptedSecret;
-            using (var ms = new MemoryStream(passphraseSource.EncryptedSecret))
-            using (var decryptionStream = new StandardAesEngine().DecryptStream(ms, derivedKey.ReadData(), passphraseSource.IV))
-            {
-                decryptedSecret = new ProtectedBinary(true, ReadToEnd(decryptionStream));
-            }
+            var decryptedSecret = DecryptSecret(passphraseSource.EncryptedSecret, derivedKey, passphraseSource.IV);
 
             return decryptedSecret;
-        }
-
-        private static byte[] ReadToEnd(Stream stream)
-        {
-            var buffer = new byte[32768];
-            using (var ms = new MemoryStream())
-            {
-                while (true)
-                {
-                    int read = stream.Read(buffer, 0, buffer.Length);
-                    if (read <= 0)
-                        return ms.ToArray();
-                    else
-                        ms.Write(buffer, 0, read);
-                }
-            }
         }
     }
 
     public class CertificateSourceFactory
     {
+        public X509Certificate2 PickCertificate()
+        {
+            MessageService.ShowInfoEx("Get ready", "If you want to use a certificate from a hardware token, please plug it now...");
 
+            var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            using (store)
+            {
+                store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
+
+                var selection = X509Certificate2UI.SelectFromCollection(
+                    store.Certificates,
+                    "Select a certificate",
+                    "Select the certificate you want to use as your authentication method.",
+                    X509SelectionFlag.SingleSelection)
+                    .Cast<X509Certificate2>().SingleOrDefault();
+
+                return selection;
+            }
+        }
+
+        public X509Certificate2 LoadFromStore(X509Certificate2 certificate)
+        {
+            var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+            using (store)
+            {
+                store.Open(OpenFlags.ReadOnly | OpenFlags.OpenExistingOnly);
+
+                var result = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
+                return result.Cast<X509Certificate2>().SingleOrDefault();
+            }
+        }
+
+        public CertificateSource GenerateCertificateSource(
+            string friendlyName,
+            X509Certificate2 certificate,
+            ProtectedBinary secret)
+        {
+            byte[] encryptedSecret;
+
+            RSA rsa;
+            ECDsa ecdsa;
+            if ((rsa = certificate.GetRSAPublicKey()) != null)
+            {
+                //var csp = new RSACryptoServiceProvider();
+                //csp.ImportParameters(rsa.ExportParameters(false));
+
+                //encryptedSecret = csp.Encrypt(secret.ReadData(), RSAEncryptionPadding.OaepSHA256);
+
+                encryptedSecret = rsa.Encrypt(secret.ReadData(), RSAEncryptionPadding.OaepSHA256);
+            }
+            else if ((ecdsa = certificate.GetECDsaPublicKey()) != null)
+            {
+                // TODO:
+                // https://stackoverflow.com/questions/47116611/how-can-i-encrypt-data-using-a-public-key-from-ecc-x509-certificate-in-net-fram
+                // var ecdh = ECDiffieHellman.Create(ecdsa.ExportParameters(false));
+                throw new NotSupportedException("Certificate's key type not supported.");
+            }
+            else
+            {
+                throw new NotSupportedException("Certificate's key type not supported.");
+            }
+
+            var result = new CertificateSource(friendlyName, encryptedSecret, null, certificate);
+            return result;
+        }
+
+        public ProtectedBinary DecryptSecret(CertificateSource certificateSource)
+        {
+            var fromSourceCertificate = certificateSource.ReadCertificate();
+            var fromStoreCertificate = LoadFromStore(fromSourceCertificate);
+
+            ProtectedBinary decryptedSecret;
+
+            RSA rsa;
+            ECDsa ecdsa;
+            if ((rsa = fromStoreCertificate.GetRSAPrivateKey()) != null)
+            {
+                decryptedSecret = new ProtectedBinary(true, rsa.Decrypt(certificateSource.EncryptedSecret, RSAEncryptionPadding.OaepSHA256));
+            }
+            else if ((ecdsa = fromStoreCertificate.GetECDsaPrivateKey()) != null)
+            {
+                // TODO:
+                // https://stackoverflow.com/questions/47116611/how-can-i-encrypt-data-using-a-public-key-from-ecc-x509-certificate-in-net-fram
+                // var ecdh = ECDiffieHellman.Create(ecdsa.ExportParameters(false));
+                throw new NotSupportedException("Certificate's key type not supported.");
+            }
+            else
+            {
+                throw new NotSupportedException("Certificate's key type not supported.");
+            }
+
+            return decryptedSecret;
+        }
     }
 }

@@ -21,19 +21,25 @@ namespace TestConsole
     {
         private static void Main(string[] args)
         {
+            var passphraseSourceFactory = new PassphraseSourceFactory();
+            var certificateSourceFactory = new CertificateSourceFactory();
+
             // about 4s on my machine
             // var kdfParameters = PassphraseSourceFactory.CreateKdfParameters(10_000_000);
-            var kdfParameters = PassphraseSourceFactory.GetBestKdfParameters(500);
+            var kdfParameters = passphraseSourceFactory.GetBestKdfParameters(500);
             var secret = new ProtectedBinary(true, CryptoRandom.Instance.GetRandomBytes(32));
 
             var sources = new List<SourceBase>()
             {
-                PassphraseSourceFactory.GeneratePassphraseSource(
+                passphraseSourceFactory.GeneratePassphraseSource(
                     "testPassphrase",
                     new ProtectedString(true, "riendutout"),
                     kdfParameters,
                     secret),
-                //new CertificateSource("testCert", new byte[32], "thumbprint"),
+                certificateSourceFactory.GenerateCertificateSource(
+                    "testCert",
+                    certificateSourceFactory.PickCertificate(),
+                    secret),
             };
 
             var keyFile = new KeyFile(sources);
@@ -42,11 +48,15 @@ namespace TestConsole
 
             var keyFileRoundTrip = XmlHelper.Deserialize<KeyFile>(keyFileXml);
 
-            var secretRoundTrip = PassphraseSourceFactory.DecryptSecret(
+            var passphraseSecretRoundTrip = passphraseSourceFactory.DecryptSecret(
                 (PassphraseSource)keyFileRoundTrip.Sources[0],
                 new ProtectedString(true, "riendutout"));
 
-            Debug.Assert(secret.ReadData().SequenceEqual(secretRoundTrip.ReadData()));
+            Debug.Assert(secret.ReadData().SequenceEqual(passphraseSecretRoundTrip.ReadData()));
+
+            var certificateSecretRoundTrip = certificateSourceFactory.DecryptSecret((CertificateSource)keyFileRoundTrip.Sources[1]);
+
+            Debug.Assert(secret.ReadData().SequenceEqual(certificateSecretRoundTrip.ReadData()));
 
             var parameters = CreateKdfParameters(1000000);
             var derivedPassphrase = GetDerivedKey("prout", parameters);

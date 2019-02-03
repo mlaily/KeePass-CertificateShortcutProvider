@@ -3,6 +3,7 @@ using KeePassLib.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -59,13 +60,16 @@ namespace AlternativeSourcesKeyProvider
     [XmlType("X509Certificate")]
     public class CertificateSource : SourceBase
     {
-        public string CertificateThumbprint { get; set; }
+        public byte[] Certificate { get; set; }
 
         public CertificateSource() { }
-        public CertificateSource(string name, byte[] encryptedSecret, byte[] iv, string certificateThumbprint)
+        public CertificateSource(string name, byte[] encryptedSecret, byte[] iv, X509Certificate2 certificate)
             : base(name, encryptedSecret, iv)
         {
-            CertificateThumbprint = certificateThumbprint;
+            // public part only
+            Certificate = certificate.Export(X509ContentType.Cert);
         }
+
+        public X509Certificate2 ReadCertificate() => new X509Certificate2(Certificate);
     }
 }

@@ -1,5 +1,7 @@
 ﻿using KeePass.Plugins;
+using KeePass.UI;
 using KeePassLib.Keys;
+using KeePassLib.Security;
 using KeePassLib.Utility;
 using System;
 using System.Collections.Generic;
@@ -16,25 +18,25 @@ namespace AlternativeSourcesKeyProvider
     public sealed class AlternativeSourcesKeyProviderExt : Plugin
     {
         private IPluginHost _host = null;
-        private SampleKeyProvider _prov = new SampleKeyProvider();
+        private AlternativeSourcesKeyProvider _provider = new AlternativeSourcesKeyProvider();
 
         public override bool Initialize(IPluginHost host)
         {
             _host = host;
 
-            _host.KeyProviderPool.Add(_prov);
+            _host.KeyProviderPool.Add(_provider);
             return true;
         }
 
         public override void Terminate()
         {
-            _host.KeyProviderPool.Remove(_prov);
+            _host.KeyProviderPool.Remove(_provider);
         }
     }
 
-    public sealed class SampleKeyProvider : KeyProvider
+    public sealed class AlternativeSourcesKeyProvider : KeyProvider
     {
-     
+
         public override string Name
         {
             get { return "Alternative Sources Key Provider"; }
@@ -42,16 +44,69 @@ namespace AlternativeSourcesKeyProvider
 
         public override byte[] GetKey(KeyProviderQueryContext ctx)
         {
-            if (ctx.CreatingNewKey)
-            {
-             
+            var keyFilePath = UrlUtil.StripExtension(ctx.DatabasePath) + ".key";
 
+            while (!File.Exists(keyFilePath))
+            {
+                var ofd = new OpenFileDialogEx("Select your key-file.");
+                if (ofd.ShowDialog() != DialogResult.OK)
+                {
+                    return null;
+                }
+                else
+                {
+                    keyFilePath = ofd.FileName;
+                }
             }
 
+            var rawKeyFileContent = File.ReadAllText(keyFilePath, Encoding.UTF8);
+            var keyFileContent = XmlHelper.Deserialize<KeyFile>(rawKeyFileContent);
 
+            var secretKey = GetSecretKey(keyFileContent);
 
+            return secretKey?.ReadData();
+        }
 
-      
+        private ProtectedBinary GetSecretKey(KeyFile keyFile)
+        {
+            ProtectedBinary secret = null;
+
+            // try to get the secret with the more convenient method first:
+
+            var certificateSource = keyFile.Sources.OfType<CertificateSource>().FirstOrDefault();
+            if (certificateSource != null)
+            {
+                var certificateSourceFactory = new CertificateSourceFactory();
+                try
+                {
+                    secret = certificateSourceFactory.DecryptSecret(certificateSource);
+                    return secret;
+                }
+                catch
+                {
+                    secret = null;
+                    // TODO?
+                }
+            }
+
+            var passphraseSource = keyFile.Sources.OfType<PassphraseSource>().FirstOrDefault();
+            if (passphraseSource != null)
+            {
+                var passphrase = PassphrasePromptForm.ShowDialogPrompt();
+
+                try
+                {
+                    var passphraseSourceFactory = new PassphraseSourceFactory();
+                    secret = passphraseSourceFactory.DecryptSecret(passphraseSource, passphrase);
+                    return secret;
+                }
+                catch
+                {
+                    secret = null;
+                    // TODO?
+                }
+            }
+
             return null;
         }
     }
