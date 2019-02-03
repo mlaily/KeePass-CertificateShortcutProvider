@@ -1,0 +1,41 @@
+# Alternative Sources Key Provider
+
+## Why?
+
+I want to be able to authenticate alternatively with the authentication method of my choice, generally the more convenient for a given situation. 
+Unlike the default KeePass behavior, I don't want the authentication means to be additive.
+
+For example, I always want to be able to authenticate with a passphrase as a backup, but if I have my security token with me, I instead want to be able to authenticate with its certificate.
+
+Ideally, I would also want to be able to authenticate easily on mobile with the NFC feature of my U2F token, so U2F should also be implemented with a short PIN or password.
+
+Since only one method of the user's choosing is required to authenticate, the weakest method provided should be strong enough to be trusted on its own.
+
+## Specifications
+
+A strong secret key is generated, and encrypted with each method I want to be able to use.
+
+The key and its different representations are stored in a key file, usually beside the database file.
+
+All the encrypted keys in the file must be different representations of only one key.
+
+### Notes
+
+#### Passphrase
+
+The passphrase source actually re-implements a master password to replace KeePass's one.
+
+Care should be taken to use similar key derivation techniques before encryption of the secret key with the passphrase. Ideally the same implementation as KeePass should be used.
+
+### Workflow
+
+Expected workflow when creating a database:
+- I create a new database choose the "Alternative Sources Key Provider"
+- When validating the form, another form owned by the plugin is shown and asks for one or more authentication sources
+  - For each source added, a matching entry will be created in the key file
+- When validation the second form, a key file is created next to the database file (by default)
+
+Loading an existing database:
+- When selecting the "Alternative Sources Key Provider" and validating the prompt, a form owned by the plugin is shown
+  and asks which source to use (passphrase, certificate file, certificate from a hardware token, U2F token with a PIN...)
+- The entry in the key file corresponding to the selected source is used, and the secret key is decrypted and given to KeePass to open the database
