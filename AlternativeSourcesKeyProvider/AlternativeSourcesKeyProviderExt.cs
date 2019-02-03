@@ -1,10 +1,15 @@
 ﻿using KeePass.Plugins;
 using KeePassLib.Keys;
+using KeePassLib.Utility;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace AlternativeSourcesKeyProvider
 {
@@ -29,16 +34,25 @@ namespace AlternativeSourcesKeyProvider
 
     public sealed class SampleKeyProvider : KeyProvider
     {
+     
         public override string Name
         {
-            get { return "Sample Key Provider"; }
+            get { return "Alternative Sources Key Provider"; }
         }
 
         public override byte[] GetKey(KeyProviderQueryContext ctx)
         {
-            // Return a sample key. In a real key provider plugin, the key
-            // would be retrieved from smart card, USB device, ...
-            return new byte[] { 2, 3, 5, 7, 11, 13 };
+            if (ctx.CreatingNewKey)
+            {
+             
+
+            }
+
+
+
+
+      
+            return null;
         }
     }
 }
