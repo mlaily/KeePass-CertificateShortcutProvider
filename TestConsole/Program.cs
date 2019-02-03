@@ -1,4 +1,5 @@
 ﻿using AlternativeSourcesKeyProvider;
+using KeePassLib.Cryptography;
 using KeePassLib.Cryptography.KeyDerivation;
 using KeePassLib.Keys;
 using KeePassLib.Security;
@@ -20,27 +21,32 @@ namespace TestConsole
     {
         private static void Main(string[] args)
         {
+            // about 4s on my machine
+            // var kdfParameters = PassphraseSourceFactory.CreateKdfParameters(10_000_000);
+            var kdfParameters = PassphraseSourceFactory.GetBestKdfParameters(500);
+            var secret = new ProtectedBinary(true, CryptoRandom.Instance.GetRandomBytes(32));
+
             var sources = new List<SourceBase>()
             {
-            new PassphraseSource("testPass", new byte[32]),
-             new CertificateSource("testCert", new byte[32], "thumbprint"),
+                PassphraseSourceFactory.GeneratePassphraseSource(
+                    "testPassphrase",
+                    new ProtectedString(true, "riendutout"),
+                    kdfParameters,
+                    secret),
+                //new CertificateSource("testCert", new byte[32], "thumbprint"),
             };
 
             var keyFile = new KeyFile(sources);
 
-            var ms = new MemoryStream();
+            var keyFileXml = XmlHelper.Serialize(keyFile);
 
-            XmlUtilEx.Serialize(ms, keyFile);
+            var keyFileRoundTrip = XmlHelper.Deserialize<KeyFile>(keyFileXml);
 
-            var outxml = Encoding.UTF8.GetString(ms.ToArray());
+            var secretRoundTrip = PassphraseSourceFactory.DecryptSecret(
+                (PassphraseSource)keyFileRoundTrip.Sources[0],
+                new ProtectedString(true, "riendutout"));
 
-            ms.Position = 0;
-
-            var deserializer = XmlUtilEx.Deserialize<KeyFile>(ms);
-
-
-
-
+            Debug.Assert(secret.ReadData().SequenceEqual(secretRoundTrip.ReadData()));
 
             var parameters = CreateKdfParameters(1000000);
             var derivedPassphrase = GetDerivedKey("prout", parameters);

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using KeePassLib.Cryptography.KeyDerivation;
+using KeePassLib.Security;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -21,27 +23,37 @@ namespace AlternativeSourcesKeyProvider
         }
     }
 
-     [XmlInclude(typeof(PassphraseSource))]
-     [XmlInclude(typeof(CertificateSource))]
+    [XmlInclude(typeof(PassphraseSource))]
+    [XmlInclude(typeof(CertificateSource))]
     public abstract class SourceBase
     {
         public string Name { get; set; }
-        public byte[] EncryptedKey { get; set; }
+        public byte[] EncryptedSecret { get; set; }
+        public byte[] IV { get; set; }
 
         public SourceBase() { }
-        public SourceBase(string name, byte[] encryptedKey)
+        public SourceBase(string name, byte[] encryptedSecret, byte[] iv)
         {
             Name = name;
-            EncryptedKey = encryptedKey;
+            EncryptedSecret = encryptedSecret;
+            IV = iv;
         }
     }
 
     [XmlType("Passphrase")]
     public class PassphraseSource : SourceBase
     {
+        public byte[] KdfParameters { get; set; }
+
         public PassphraseSource() { }
-        public PassphraseSource(string name, byte[] encryptedKey)
-            : base(name, encryptedKey) { }
+        public PassphraseSource(string name, byte[] encryptedSecret, byte[] iv, KdfParameters kdfParameters)
+            : base(name, encryptedSecret, iv)
+        {
+            KdfParameters = KeePassLib.Cryptography.KeyDerivation.KdfParameters.SerializeExt(kdfParameters);
+        }
+
+        public KdfParameters DeserializeKdfParameters()
+            => KeePassLib.Cryptography.KeyDerivation.KdfParameters.DeserializeExt(KdfParameters);
     }
 
     [XmlType("X509Certificate")]
@@ -50,8 +62,8 @@ namespace AlternativeSourcesKeyProvider
         public string CertificateThumbprint { get; set; }
 
         public CertificateSource() { }
-        public CertificateSource(string name, byte[] encryptedKey, string certificateThumbprint)
-            : base(name, encryptedKey)
+        public CertificateSource(string name, byte[] encryptedSecret, byte[] iv, string certificateThumbprint)
+            : base(name, encryptedSecret, iv)
         {
             CertificateThumbprint = certificateThumbprint;
         }
