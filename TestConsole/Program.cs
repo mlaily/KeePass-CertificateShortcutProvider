@@ -1,4 +1,4 @@
-﻿using AlternativeSourcesKeyProvider;
+﻿using OptionalCertificateOverMasterKeyProvider;
 using KeePassLib.Cryptography;
 using KeePassLib.Cryptography.KeyDerivation;
 using KeePassLib.Keys;

@@ -7,8 +7,8 @@
     <ProjectGuid>{3A7A0ECD-58E1-4FA2-97D3-0DDC6CE32724}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>AlternativeSourcesKeyProvider</RootNamespace>
-    <AssemblyName>AlternativeSourcesKeyProvider</AssemblyName>
+    <RootNamespace>OptionalCertificateOverMasterKeyProvider</RootNamespace>
+    <AssemblyName>OptionalCertificateOverMasterKeyProvider</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -48,7 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AlternativeSourcesKeyProviderExt.cs" />
+    <Compile Include="OptionalCertificateOverMasterKeyProviderExt.cs" />
     <Compile Include="KeyFile.cs" />
     <Compile Include="PassphrasePromptForm.cs">
       <SubType>Form</SubType>

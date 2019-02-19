@@ -13,12 +13,12 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
 
-namespace AlternativeSourcesKeyProvider
+namespace OptionalCertificateOverMasterKeyProvider
 {
-    public sealed class AlternativeSourcesKeyProviderExt : Plugin
+    public sealed class OptionalCertificateOverMasterKeyProviderExt : Plugin
     {
         private IPluginHost _host = null;
-        private AlternativeSourcesKeyProvider _provider = new AlternativeSourcesKeyProvider();
+        private OptionalCertificateOverMasterKeyProvider _provider = new OptionalCertificateOverMasterKeyProvider();
 
         public override bool Initialize(IPluginHost host)
         {
@@ -34,7 +34,7 @@ namespace AlternativeSourcesKeyProvider
         }
     }
 
-    public sealed class AlternativeSourcesKeyProvider : KeyProvider
+    public sealed class OptionalCertificateOverMasterKeyProvider : KeyProvider
     {
 
         public override string Name
@@ -44,6 +44,8 @@ namespace AlternativeSourcesKeyProvider
 
         public override byte[] GetKey(KeyProviderQueryContext ctx)
         {
+            StrUtil.Utf8.GetBytes("test");
+
             var keyFilePath = UrlUtil.StripExtension(ctx.DatabasePath) + ".key";
 
             while (!File.Exists(keyFilePath))

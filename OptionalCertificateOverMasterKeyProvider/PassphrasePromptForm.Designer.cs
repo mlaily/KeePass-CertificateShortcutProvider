@@ -1,4 +1,4 @@
-﻿namespace AlternativeSourcesKeyProvider
+﻿namespace OptionalCertificateOverMasterKeyProvider
 {
     partial class PassphrasePromptForm
     {

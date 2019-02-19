@@ -55,9 +55,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\AlternativeSourcesKeyProvider\AlternativeSourcesKeyProvider.csproj">
+    <ProjectReference Include="..\OptionalCertificateOverMasterKeyProvider\OptionalCertificateOverMasterKeyProvider.csproj">
       <Project>{3a7a0ecd-58e1-4fa2-97d3-0ddc6ce32724}</Project>
-      <Name>AlternativeSourcesKeyProvider</Name>
+      <Name>OptionalCertificateOverMasterKeyProvider</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

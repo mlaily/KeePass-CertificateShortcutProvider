@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
-namespace AlternativeSourcesKeyProvider
+namespace OptionalCertificateOverMasterKeyProvider
 {
     [XmlType("Key")]
     public class KeyFile
