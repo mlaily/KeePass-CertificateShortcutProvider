@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("OptionalCertificateOverMasterKeyProvider")]
-[assembly: AssemblyDescription("test")]
+[assembly: AssemblyTitle("Optional Certificate Over Master Key Provider")]
+[assembly: AssemblyDescription("Provide a way to open the KeePass key-chain with an X509 certificate.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("test")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("KeePass Plugin")]
-[assembly: AssemblyCopyright("Copyright ©  2019")]
+[assembly: AssemblyCopyright("Copyright © Melvyn Laïly 2019")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
