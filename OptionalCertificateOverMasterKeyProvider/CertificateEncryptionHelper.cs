@@ -58,130 +58,7 @@ namespace OptionalCertificateOverMasterKeyProvider
         }
     }
 
-    public static class XmlHelper
-    {
-        public static string Serialize<T>(T t)
-        {
-            using (var ms = new MemoryStream())
-            {
-                XmlUtilEx.Serialize(ms, t);
-                // XmlUtilEx uses UTF8
-                return Encoding.UTF8.GetString(ms.ToArray());
-            }
-        }
-
-        public static T Deserialize<T>(string xml)
-        { // XmlUtilEx uses UTF8
-            using (var ms = new MemoryStream(Encoding.UTF8.GetBytes(xml)))
-            {
-                return XmlUtilEx.Deserialize<T>(ms);
-            }
-        }
-    }
-
-    public abstract class SourceFactoryBase
-    {
-        protected byte[] EncryptSecret(ProtectedBinary secret, ProtectedBinary key, out byte[] iv)
-        {
-            iv = CryptoRandom.Instance.GetRandomBytes(16); // AES 256 uses 128bits blocks
-            using (var ms = new MemoryStream())
-            {
-                using (var encryptionStream = new StandardAesEngine().EncryptStream(ms, key.ReadData(), iv))
-                {
-                    MemUtil.Write(encryptionStream, secret.ReadData());
-                }
-                return ms.ToArray();
-            }
-        }
-
-        protected ProtectedBinary DecryptSecret(byte[] encryptedSecret, ProtectedBinary key, byte[] iv)
-        {
-            using (var ms = new MemoryStream(encryptedSecret))
-            using (var decryptionStream = new StandardAesEngine().DecryptStream(ms, key.ReadData(), iv))
-            {
-                return new ProtectedBinary(true, ReadToEnd(decryptionStream));
-            }
-        }
-
-        protected byte[] ReadToEnd(Stream stream)
-        {
-            var buffer = new byte[32768];
-            using (var ms = new MemoryStream())
-            {
-                while (true)
-                {
-                    int read = stream.Read(buffer, 0, buffer.Length);
-                    if (read <= 0)
-                        return ms.ToArray();
-                    else
-                        ms.Write(buffer, 0, read);
-                }
-            }
-        }
-    }
-
-    public class PassphraseSourceFactory : SourceFactoryBase
-    {
-        public KdfParameters GetBestKdfParameters(uint miliseconds = 1000)
-        {
-            var kdf = new AesKdf();
-            var p = kdf.GetBestParameters(miliseconds);
-            kdf.Randomize(p);
-            return p;
-        }
-
-        public KdfParameters CreateKdfParameters(ulong? rounds = null)
-        {
-            var kdf = new AesKdf();
-            var p = kdf.GetDefaultParameters();
-            kdf.Randomize(p);
-            if (rounds != null)
-            {
-                p.SetUInt64(AesKdf.ParamRounds, rounds.Value);
-            }
-            return p;
-        }
-
-        private static ProtectedBinary DerivePassphrase(ProtectedString passphrase, KdfParameters kdfParameters)
-        {
-            var compositeKey = new CompositeKey();
-            compositeKey.AddUserKey(new KcpPassword(passphrase.ReadString()));
-            var derivedKey = compositeKey.GenerateKey32(kdfParameters);
-            return derivedKey;
-        }
-
-        public PassphraseSource GeneratePassphraseSource(
-            string friendlyName,
-            ProtectedString passphrase,
-            KdfParameters kdfParameters,
-            ProtectedBinary secret)
-        {
-            // Derive the passphrase
-            var derivedKey = DerivePassphrase(passphrase, kdfParameters);
-
-            // Encrypt the secret with the derived key
-            var encryptedSecretBytes = EncryptSecret(secret, derivedKey, out var iv);
-
-            var result = new PassphraseSource(friendlyName, encryptedSecretBytes, iv, kdfParameters);
-            return result;
-        }
-
-        public ProtectedBinary DecryptSecret(PassphraseSource passphraseSource, ProtectedString passphrase)
-        {
-            // Read parameters
-            var kdfParameters = passphraseSource.DeserializeKdfParameters();
-
-            // Derive the passphrase
-            var derivedKey = DerivePassphrase(passphrase, kdfParameters);
-
-            // Deccrypt the secret with the derived key
-            var decryptedSecret = DecryptSecret(passphraseSource.EncryptedSecret, derivedKey, passphraseSource.IV);
-
-            return decryptedSecret;
-        }
-    }
-
-    public class CertificateSourceFactory
+    public class CertificateEncryptionHelper
     {
         public X509Certificate2 PickCertificate()
         {
@@ -215,10 +92,7 @@ namespace OptionalCertificateOverMasterKeyProvider
             }
         }
 
-        public CertificateSource GenerateCertificateSource(
-            string friendlyName,
-            X509Certificate2 certificate,
-            ProtectedBinary secret)
+        public KeyFile EncryptSecret(X509Certificate2 certificate, ProtectedBinary secret)
         {
             byte[] encryptedSecret;
 
@@ -245,13 +119,13 @@ namespace OptionalCertificateOverMasterKeyProvider
                 throw new NotSupportedException("Certificate's key type not supported.");
             }
 
-            var result = new CertificateSource(friendlyName, encryptedSecret, null, certificate);
+            var result = new KeyFile(encryptedSecret, certificate);
             return result;
         }
 
-        public ProtectedBinary DecryptSecret(CertificateSource certificateSource)
+        public ProtectedBinary DecryptSecret(KeyFile keyFile)
         {
-            var fromSourceCertificate = certificateSource.ReadCertificate();
+            var fromSourceCertificate = keyFile.ReadCertificate();
             var fromStoreCertificate = LoadFromStore(fromSourceCertificate);
 
             ProtectedBinary decryptedSecret;
@@ -260,7 +134,7 @@ namespace OptionalCertificateOverMasterKeyProvider
             ECDsa ecdsa;
             if ((rsa = fromStoreCertificate.GetRSAPrivateKey()) != null)
             {
-                decryptedSecret = new ProtectedBinary(true, rsa.Decrypt(certificateSource.EncryptedSecret, RSAEncryptionPadding.OaepSHA256));
+                decryptedSecret = new ProtectedBinary(true, rsa.Decrypt(keyFile.EncryptedSecret, RSAEncryptionPadding.OaepSHA256));
             }
             else if ((ecdsa = fromStoreCertificate.GetECDsaPrivateKey()) != null)
             {

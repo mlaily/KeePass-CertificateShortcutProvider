@@ -39,13 +39,12 @@ namespace OptionalCertificateOverMasterKeyProvider
 
         public override string Name
         {
-            get { return "Alternative Sources Key Provider"; }
+            get { return "Optional Certificate Over Master Password Provider"; }
         }
 
         public override byte[] GetKey(KeyProviderQueryContext ctx)
         {
-            StrUtil.Utf8.GetBytes("test");
-
+            //StrUtil.Utf8.GetBytes
             var keyFilePath = UrlUtil.StripExtension(ctx.DatabasePath) + ".key";
 
             while (!File.Exists(keyFilePath))
@@ -73,43 +72,18 @@ namespace OptionalCertificateOverMasterKeyProvider
         {
             ProtectedBinary secret = null;
 
-            // try to get the secret with the more convenient method first:
+            var certificateHelper = new CertificateEncryptionHelper();
 
-            var certificateSource = keyFile.Sources.OfType<CertificateSource>().FirstOrDefault();
-            if (certificateSource != null)
+            try
             {
-                var certificateSourceFactory = new CertificateSourceFactory();
-                try
-                {
-                    secret = certificateSourceFactory.DecryptSecret(certificateSource);
-                    return secret;
-                }
-                catch
-                {
-                    secret = null;
-                    // TODO?
-                }
+                secret = certificateHelper.DecryptSecret(keyFile);
+                return secret;
             }
-
-            var passphraseSource = keyFile.Sources.OfType<PassphraseSource>().FirstOrDefault();
-            if (passphraseSource != null)
+            catch
             {
-                var passphrase = PassphrasePromptForm.ShowDialogPrompt();
-
-                try
-                {
-                    var passphraseSourceFactory = new PassphraseSourceFactory();
-                    secret = passphraseSourceFactory.DecryptSecret(passphraseSource, passphrase);
-                    return secret;
-                }
-                catch
-                {
-                    secret = null;
-                    // TODO?
-                }
+                return null;
+                // TODO?
             }
-
-            return null;
         }
     }
 }
