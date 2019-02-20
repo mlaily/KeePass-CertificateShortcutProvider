@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.271
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OptionalCertificateOverMasterKeyProvider", "OptionalCertificateOverMasterKeyProvider\OptionalCertificateOverMasterKeyProvider.csproj", "{3A7A0ECD-58E1-4FA2-97D3-0DDC6CE32724}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CertificateShortcutProvider", "CertificateShortcutProvider\CertificateShortcutProvider.csproj", "{3A7A0ECD-58E1-4FA2-97D3-0DDC6CE32724}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "TestConsole\TestConsole.csproj", "{1B365B9A-73B4-4A6A-A7CB-9B2CC46B0518}"
 EndProject

@@ -13,12 +13,12 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml.Linq;
 
-namespace OptionalCertificateOverMasterKeyProvider
+namespace CertificateShortcutProvider
 {
-    public sealed class OptionalCertificateOverMasterKeyProviderExt : Plugin
+    public sealed class CertificateShortcutProviderExt : Plugin
     {
         private IPluginHost _host = null;
-        private OptionalCertificateOverMasterKeyProvider _provider = new OptionalCertificateOverMasterKeyProvider();
+        private CertificateShortcutProvider _provider = new CertificateShortcutProvider();
 
         public override bool Initialize(IPluginHost host)
         {
@@ -34,7 +34,7 @@ namespace OptionalCertificateOverMasterKeyProvider
         }
     }
 
-    public sealed class OptionalCertificateOverMasterKeyProvider : KeyProvider
+    public sealed class CertificateShortcutProvider : KeyProvider
     {
 
         public override string Name

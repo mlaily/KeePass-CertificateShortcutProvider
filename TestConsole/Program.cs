@@ -3,7 +3,7 @@ using KeePassLib.Cryptography.KeyDerivation;
 using KeePassLib.Keys;
 using KeePassLib.Security;
 using KeePassLib.Utility;
-using OptionalCertificateOverMasterKeyProvider;
+using CertificateShortcutProvider;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

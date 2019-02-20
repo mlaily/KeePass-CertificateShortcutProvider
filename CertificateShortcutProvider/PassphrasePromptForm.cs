@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace OptionalCertificateOverMasterKeyProvider
+namespace CertificateShortcutProvider
 {
     public partial class PassphrasePromptForm : Form
     {
