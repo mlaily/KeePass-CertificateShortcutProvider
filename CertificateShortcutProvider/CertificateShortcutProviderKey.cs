@@ -1,6 +1,4 @@
-﻿using KeePassLib.Cryptography.KeyDerivation;
-using KeePassLib.Security;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -10,14 +8,14 @@ using System.Xml.Serialization;
 
 namespace CertificateShortcutProvider
 {
-    [XmlType("Key")]
-    public class KeyFile
+    [XmlType("CertificateShortcutProviderKey")]
+    public class CertificateShortcutProviderKey
     {
         public byte[] EncryptedSecret { get; set; }
         public byte[] Certificate { get; set; }
 
-        public KeyFile() { }
-        public KeyFile(byte[] encryptedSecret, X509Certificate2 certificate)
+        public CertificateShortcutProviderKey() { }
+        public CertificateShortcutProviderKey(byte[] encryptedSecret, X509Certificate2 certificate)
         {
             EncryptedSecret = encryptedSecret;
             // public part only

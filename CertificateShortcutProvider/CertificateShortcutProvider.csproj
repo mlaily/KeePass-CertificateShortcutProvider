@@ -48,21 +48,21 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CertificateShortcutProvider.cs" />
     <Compile Include="CertificateShortcutProviderExt.cs" />
-    <Compile Include="KeyFile.cs" />
-    <Compile Include="PassphrasePromptForm.cs">
+    <Compile Include="CertificateShortcutProviderKey.cs" />
+    <Compile Include="CryptoHelpers.cs" />
+    <Compile Include="KeyCreationForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="PassphrasePromptForm.Designer.cs">
-      <DependentUpon>PassphrasePromptForm.cs</DependentUpon>
+    <Compile Include="KeyCreationForm.Designer.cs">
+      <DependentUpon>KeyCreationForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="CertificateEncryptionHelper.cs" />
-    <Compile Include="XmlHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="PassphrasePromptForm.resx">
-      <DependentUpon>PassphrasePromptForm.cs</DependentUpon>
+    <EmbeddedResource Include="KeyCreationForm.resx">
+      <DependentUpon>KeyCreationForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

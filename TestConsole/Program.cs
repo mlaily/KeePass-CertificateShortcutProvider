@@ -28,7 +28,7 @@ namespace TestConsole
 
             var keyFileXml = XmlHelper.Serialize(keyFile);
 
-            var keyFileRoundTrip = XmlHelper.Deserialize<KeyFile>(keyFileXml);
+            var keyFileRoundTrip = XmlHelper.Deserialize<CertificateShortcutProviderKey>(keyFileXml);
 
             var certificateSecretRoundTrip = certificateHelper.DecryptSecret(keyFileRoundTrip);
 
