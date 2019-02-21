@@ -32,5 +32,5 @@ If you think otherwise, please open an issue...
 
 For now, only RSA certificates are supported.
 
-ECDSA is a signing algorithm. Supporting ECSA certificates would require some kind of hack to be able to encrypt the master password.
+ECDSA is a signing algorithm. Supporting ECDSA certificates would require some kind of hack to be able to encrypt the master password.
 See [here if you feel adventurous](https://stackoverflow.com/questions/47116611/how-can-i-encrypt-data-using-a-public-key-from-ecc-x509-certificate-in-net-fram)...
