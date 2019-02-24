@@ -24,7 +24,7 @@ If required - on a KeePass version without plugins like Android - the database c
 
 It should be.
 
-If you use a certificate with a strong enough key (RSA with at least a 1024 bits key is recommended), the limiting factor will most likely be the strenght of your master password.
+If you use a certificate with a strong enough key (RSA with at least a 1024 bits key is recommended), the limiting factor will most likely be the strength of your master password.
 
 If you think otherwise, please open an issue...
 
