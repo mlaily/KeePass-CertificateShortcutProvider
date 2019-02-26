@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Certificate Shortcut Provider")]
 [assembly: AssemblyDescription("Provide a way to open the KeePass key-chain with an X509 certificate.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Melvyn Laïly")]
 [assembly: AssemblyProduct("KeePass Plugin")]
 [assembly: AssemblyCopyright("Copyright © Melvyn Laïly 2019")]
 [assembly: AssemblyTrademark("")]
@@ -32,5 +32,11 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+
+[assembly: AssemblyVersion(Version.Number)]
+[assembly: AssemblyFileVersion(Version.Number)]
+
+public static class Version
+{
+    public const string Number = "1.1.0.0";
+}
