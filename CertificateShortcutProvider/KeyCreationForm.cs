@@ -116,7 +116,7 @@ namespace CertificateShortcutProvider
                 }
             }
 
-            var cspKey = CryptoHelpers.EncryptSecret(_selectedCertificate, secureTextBox.TextEx);
+            var cspKey = CryptoHelpers.EncryptPassphrase(_selectedCertificate, secureTextBox.TextEx);
 
             using (var fs = new FileStream(keyFileLocationTextBox.Text, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.Read))
             {

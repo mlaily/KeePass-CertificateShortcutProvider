@@ -1,6 +1,10 @@
-﻿using KeePassLib.Security;
+﻿using KeePassLib.Cryptography;
+using KeePassLib.Cryptography.Cipher;
+using KeePassLib.Security;
+using KeePassLib.Utility;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -11,20 +15,25 @@ namespace CertificateShortcutProvider
 {
     public static class CryptoHelpers
     {
-        public static CertificateShortcutProviderKey EncryptSecret(X509Certificate2 certificate, ProtectedString secret)
+        public static CertificateShortcutProviderKey EncryptPassphrase(X509Certificate2 certificate, ProtectedString passphrase)
         {
-            byte[] encryptedSecret;
+            // Instead of directly encrypting the passphrase with the certificate,
+            // we use an intermediate random symmetric key.
+            // The passphrase is encrypted with the symmetric key, and the symmetric key is encrypted with the certificate.
+            // (asymmetric encryption is not suited to encrypt a lot of data)
 
+            // symmetric encryption:
+            var randomKey = new ProtectedBinary(true, CryptoRandom.Instance.GetRandomBytes(32));
+            var passphraseBinary = new ProtectedBinary(true, passphrase.ReadUtf8());
+            var encryptedPassphrase = EncryptSecret(passphraseBinary, randomKey, out var iv);
+
+            // now we asymmetrically encrypt the random key.
+            byte[] encryptedRandomKey;
             RSA rsa;
             ECDsa ecdsa;
             if ((rsa = certificate.GetRSAPublicKey()) != null)
             {
-                //var csp = new RSACryptoServiceProvider();
-                //csp.ImportParameters(rsa.ExportParameters(false));
-
-                //encryptedSecret = csp.Encrypt(secret.ReadData(), RSAEncryptionPadding.OaepSHA256);
-
-                encryptedSecret = rsa.Encrypt(secret.ReadUtf8(), RSAEncryptionPadding.OaepSHA256);
+                encryptedRandomKey = rsa.Encrypt(randomKey.ReadData(), RSAEncryptionPadding.OaepSHA256);
             }
             else if ((ecdsa = certificate.GetECDsaPublicKey()) != null)
             {
@@ -38,11 +47,11 @@ namespace CertificateShortcutProvider
                 throw new NotSupportedException("Certificate's key type not supported.");
             }
 
-            var result = new CertificateShortcutProviderKey(encryptedSecret, certificate);
+            var result = new CertificateShortcutProviderKey(certificate, encryptedRandomKey, iv, encryptedPassphrase);
             return result;
         }
 
-        public static ProtectedBinary DecryptSecret(CertificateShortcutProviderKey keyFile)
+        public static ProtectedBinary DecryptPassphrase(CertificateShortcutProviderKey keyFile)
         {
             var fromSourceCertificate = keyFile.ReadCertificate();
             var fromStoreCertificate = LoadFromStore(fromSourceCertificate);
@@ -52,13 +61,13 @@ namespace CertificateShortcutProvider
                 throw new InvalidOperationException("The specified certificate could not be found in the store.");
             }
 
-            ProtectedBinary decryptedSecret;
-
+            // First we decrypt the symmetric key:
+            ProtectedBinary decryptedKey;
             RSA rsa;
             ECDsa ecdsa;
             if ((rsa = fromStoreCertificate.GetRSAPrivateKey()) != null)
             {
-                decryptedSecret = new ProtectedBinary(true, rsa.Decrypt(keyFile.EncryptedSecret, RSAEncryptionPadding.OaepSHA256));
+                decryptedKey = new ProtectedBinary(true, rsa.Decrypt(keyFile.EncryptedKey, RSAEncryptionPadding.OaepSHA256));
             }
             else if ((ecdsa = fromStoreCertificate.GetECDsaPrivateKey()) != null)
             {
@@ -72,7 +81,10 @@ namespace CertificateShortcutProvider
                 throw new NotSupportedException("Certificate's key type not supported.");
             }
 
-            return decryptedSecret;
+            // Then we use the symmetric key to decrypt the passphrase:
+            var decryptedPassphrase = DecryptSecret(keyFile.EncryptedPassphrase, decryptedKey, keyFile.IV);
+
+            return decryptedPassphrase;
         }
 
         public static X509Certificate2 LoadFromStore(X509Certificate2 certificate)
@@ -84,6 +96,44 @@ namespace CertificateShortcutProvider
 
                 var result = store.Certificates.Find(X509FindType.FindByThumbprint, certificate.Thumbprint, false);
                 return result.Cast<X509Certificate2>().SingleOrDefault();
+            }
+        }
+
+        private static byte[] EncryptSecret(ProtectedBinary secret, ProtectedBinary key, out byte[] iv)
+        {
+            iv = CryptoRandom.Instance.GetRandomBytes(16); // AES 256 uses 128bits blocks
+            using (var ms = new MemoryStream())
+            {
+                using (var encryptionStream = new StandardAesEngine().EncryptStream(ms, key.ReadData(), iv))
+                {
+                    MemUtil.Write(encryptionStream, secret.ReadData());
+                }
+                return ms.ToArray();
+            }
+        }
+
+        private static ProtectedBinary DecryptSecret(byte[] encryptedSecret, ProtectedBinary key, byte[] iv)
+        {
+            using (var ms = new MemoryStream(encryptedSecret))
+            using (var decryptionStream = new StandardAesEngine().DecryptStream(ms, key.ReadData(), iv))
+            {
+                return new ProtectedBinary(true, ReadToEnd(decryptionStream));
+            }
+        }
+
+        private static byte[] ReadToEnd(Stream stream)
+        {
+            var buffer = new byte[32768];
+            using (var ms = new MemoryStream())
+            {
+                while (true)
+                {
+                    int read = stream.Read(buffer, 0, buffer.Length);
+                    if (read <= 0)
+                        return ms.ToArray();
+                    else
+                        ms.Write(buffer, 0, read);
+                }
             }
         }
     }

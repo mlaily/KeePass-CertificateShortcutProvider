@@ -61,7 +61,7 @@ namespace CertificateShortcutProvider
                     cspKey = XmlUtilEx.Deserialize<CertificateShortcutProviderKey>(fs);
                 }
 
-                var secretKey = CryptoHelpers.DecryptSecret(cspKey);
+                var secretKey = CryptoHelpers.DecryptPassphrase(cspKey);
 
                 return secretKey.ReadData();
             }
