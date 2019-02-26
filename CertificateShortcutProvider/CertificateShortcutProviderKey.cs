@@ -11,6 +11,11 @@ namespace CertificateShortcutProvider
     [XmlType("CertificateShortcutProviderKey")]
     public class CertificateShortcutProviderKey
     {
+        public const int CurrentVersion = 1;
+
+        [XmlAttribute]
+        public int Version { get; set; }
+
         public byte[] Certificate { get; set; }
 
         /// <summary>
@@ -26,6 +31,8 @@ namespace CertificateShortcutProvider
         public CertificateShortcutProviderKey() { }
         public CertificateShortcutProviderKey(X509Certificate2 certificate, byte[] encryptedKey, byte[] iv, byte[] encryptedPassphrase)
         {
+            Version = CurrentVersion;
+
             // public part only
             Certificate = certificate.Export(X509ContentType.Cert);
 
