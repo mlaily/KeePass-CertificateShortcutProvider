@@ -23,9 +23,10 @@ namespace CertificateShortcutProvider
             // (asymmetric encryption is not suited to encrypt a lot of data)
 
             // symmetric encryption:
+            byte[] iv = { };
             var randomKey = new ProtectedBinary(true, CryptoRandom.Instance.GetRandomBytes(32));
             var passphraseBinary = new ProtectedBinary(true, passphrase.ReadUtf8());
-            var encryptedPassphrase = EncryptSecret(passphraseBinary, randomKey, out var iv);
+            var encryptedPassphrase = EncryptSecret(passphraseBinary, randomKey, out iv);
 
             // now we asymmetrically encrypt the random key.
             byte[] encryptedRandomKey;
