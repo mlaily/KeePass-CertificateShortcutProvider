@@ -119,3 +119,6 @@ csharp_preserve_single_line_blocks = true
 # CA1303: Do not pass literals as localized parameters
 # TODO if we want to support i18n in the future...
 dotnet_diagnostic.CA1303.severity = none
+
+# IDE0055: Fix formatting
+dotnet_diagnostic.IDE0055.severity = warning
