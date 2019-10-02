@@ -45,14 +45,9 @@ namespace CertificateShortcutProvider
 
             if (ctx.CreatingNewKey)
             {
-                // Show the key file creation form and always return null,
-                // so that it's not possible to accidentally create a composite key with this provider.
-
-                using (var form = new KeyCreationForm(keyFilePath))
-                {
-                    form.ShowDialog();
-                    return null;
-                }
+                // Always return null, so that it's not possible to accidentally create a composite key with this provider.
+                MessageBox.Show("Certificate Shortcut Provider uses the encrypted master key to access the database. There is no initialization needed other than the master key.\n\nUse 'Options > Initialize Certificate Shortcut Provider...' from the menu to create the encrypted master key.", Name, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return null;
             }
             else
             {
