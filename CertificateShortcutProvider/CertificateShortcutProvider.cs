@@ -28,6 +28,14 @@ namespace CertificateShortcutProvider
             }
         }
 
+        public override bool GetKeyMightShowGui
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         public override byte[] GetKey(KeyProviderQueryContext ctx)
         {
             // The key file is expected to be next to the database by default:
