@@ -20,6 +20,14 @@ namespace CertificateShortcutProvider
             get { return "Certificate Shortcut Provider"; }
         }
 
+        public override bool SecureDesktopCompatible
+        {
+            get
+            {
+                return true;
+            }
+        }
+
         public override byte[] GetKey(KeyProviderQueryContext ctx)
         {
             // The key file is expected to be next to the database by default:
