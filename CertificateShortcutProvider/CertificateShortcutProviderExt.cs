@@ -1,4 +1,4 @@
-﻿using KeePass.Plugins;
+using KeePass.Plugins;
 using KeePassLib.Utility;
 using System;
 using System.Collections.Generic;
@@ -32,15 +32,15 @@ namespace CertificateShortcutProvider
         {
             if (t == PluginMenuType.Main)
             {
-                ToolStripMenuItem tsmi = new ToolStripMenuItem();
+                var tsmi = new ToolStripMenuItem();
                 tsmi.Text = "Initialize Certificate Shortcut Provider...";
-                tsmi.Click += this.onOptionsClicked;
+                tsmi.Click += OnOptionsClicked;
                 return tsmi;
             }
             return null;
         }
 
-        private void onOptionsClicked(object sender, EventArgs e)
+        private void OnOptionsClicked(object sender, EventArgs e)
         {
             var databasePath = UrlUtil.StripExtension(_host.Database.IOConnectionInfo.Path);
 

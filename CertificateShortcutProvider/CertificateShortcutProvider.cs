@@ -20,21 +20,9 @@ namespace CertificateShortcutProvider
             get { return "Certificate Shortcut Provider"; }
         }
 
-        public override bool SecureDesktopCompatible
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool SecureDesktopCompatible => true;
 
-        public override bool GetKeyMightShowGui
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool GetKeyMightShowGui => true;
 
         public override byte[] GetKey(KeyProviderQueryContext ctx)
         {
