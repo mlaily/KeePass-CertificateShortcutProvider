@@ -2,6 +2,7 @@
 using KeePassLib.Utility;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,7 +42,14 @@ namespace CertificateShortcutProvider
 
         private void onOptionsClicked(object sender, EventArgs e)
         {
-            var keyFilePath = UrlUtil.StripExtension(_host.Database.IOConnectionInfo.Path) + CertificateShortcutProvider.DefaultKeyExtension;
+            var databasePath = UrlUtil.StripExtension(_host.Database.IOConnectionInfo.Path);
+
+            if (string.IsNullOrWhiteSpace(databasePath))
+            {
+                databasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Database");
+            }
+
+            var keyFilePath = databasePath + CertificateShortcutProvider.DefaultKeyExtension;
 
             using (var form = new KeyCreationForm(keyFilePath))
             {
