@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -9,6 +10,7 @@ using System.Xml.Serialization;
 namespace CertificateShortcutProvider
 {
     [XmlType("CertificateShortcutProviderKey")]
+    [SuppressMessage("Performance", "CA1819:Properties should not return arrays")]
     public class CertificateShortcutProviderKey
     {
         public const int CurrentVersion = 1;
@@ -31,6 +33,8 @@ namespace CertificateShortcutProvider
         public CertificateShortcutProviderKey() { }
         public CertificateShortcutProviderKey(X509Certificate2 certificate, byte[] encryptedKey, byte[] iv, byte[] encryptedPassphrase)
         {
+            if (certificate == null) throw new ArgumentNullException(nameof(certificate));
+
             Version = CurrentVersion;
 
             // public part only

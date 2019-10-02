@@ -13,10 +13,12 @@ namespace CertificateShortcutProvider
     public sealed class CertificateShortcutProviderExt : Plugin
     {
         private IPluginHost _host = null;
-        private CertificateShortcutProvider _provider = new CertificateShortcutProvider();
+        private readonly CertificateShortcutProvider _provider = new CertificateShortcutProvider();
 
         public override bool Initialize(IPluginHost host)
         {
+            if (host == null) throw new ArgumentNullException(nameof(host));
+
             _host = host;
 
             _host.KeyProviderPool.Add(_provider);

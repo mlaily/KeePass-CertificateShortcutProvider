@@ -1,4 +1,4 @@
-﻿using KeePass.App;
+using KeePass.App;
 using KeePass.UI;
 using KeePassLib.Utility;
 using System;
@@ -125,5 +125,20 @@ namespace CertificateShortcutProvider
 
             DialogResult = DialogResult.OK;
         }
+
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                components?.Dispose();
+                _selectedCertificate?.Dispose();
+            }
+            base.Dispose(disposing);
+        }
     }
 }
+

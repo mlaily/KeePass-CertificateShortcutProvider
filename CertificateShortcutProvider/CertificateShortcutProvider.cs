@@ -1,8 +1,9 @@
-﻿using KeePass.UI;
+using KeePass.UI;
 using KeePassLib.Keys;
 using KeePassLib.Utility;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using System.Windows.Forms;
 
 namespace CertificateShortcutProvider
 {
+    [SuppressMessage("Naming", "CA1724:Type names should not match namespaces")]
     public sealed class CertificateShortcutProvider : KeyProvider
     {
         public const string DefaultKeyExtension = ".cspkey";
@@ -26,6 +28,8 @@ namespace CertificateShortcutProvider
 
         public override byte[] GetKey(KeyProviderQueryContext ctx)
         {
+            if (ctx == null) throw new ArgumentNullException(nameof(ctx));
+
             // The key file is expected to be next to the database by default:
             var keyFilePath = UrlUtil.StripExtension(ctx.DatabasePath) + DefaultKeyExtension;
 

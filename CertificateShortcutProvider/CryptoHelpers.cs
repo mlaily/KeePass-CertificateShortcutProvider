@@ -1,4 +1,4 @@
-﻿using KeePassLib.Cryptography;
+using KeePassLib.Cryptography;
 using KeePassLib.Cryptography.Cipher;
 using KeePassLib.Security;
 using KeePassLib.Utility;
@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace CertificateShortcutProvider
 {
-    public static class CryptoHelpers
+    internal static class CryptoHelpers
     {
         public static CertificateShortcutProviderKey EncryptPassphrase(X509Certificate2 certificate, ProtectedString passphrase)
         {
@@ -53,38 +53,40 @@ namespace CertificateShortcutProvider
 
         public static ProtectedBinary DecryptPassphrase(CertificateShortcutProviderKey keyFile)
         {
-            var fromSourceCertificate = keyFile.ReadCertificate();
-            var fromStoreCertificate = LoadFromStore(fromSourceCertificate);
-
-            if (fromStoreCertificate == null)
+            using (var fromSourceCertificate = keyFile.ReadCertificate())
             {
-                throw new InvalidOperationException("The specified certificate could not be found in the store.");
-            }
+                var fromStoreCertificate = LoadFromStore(fromSourceCertificate);
 
-            // First we decrypt the symmetric key:
-            ProtectedBinary decryptedKey;
-            RSA rsa;
-            ECDsa ecdsa;
-            if ((rsa = fromStoreCertificate.GetRSAPrivateKey()) != null)
-            {
-                decryptedKey = new ProtectedBinary(true, rsa.Decrypt(keyFile.EncryptedKey, RSAEncryptionPadding.OaepSHA256));
-            }
-            else if ((ecdsa = fromStoreCertificate.GetECDsaPrivateKey()) != null)
-            {
-                // TODO:
-                // https://stackoverflow.com/questions/47116611/how-can-i-encrypt-data-using-a-public-key-from-ecc-x509-certificate-in-net-fram
-                // var ecdh = ECDiffieHellman.Create(ecdsa.ExportParameters(false));
-                throw new NotSupportedException("Certificate's key type not supported.");
-            }
-            else
-            {
-                throw new NotSupportedException("Certificate's key type not supported.");
-            }
+                if (fromStoreCertificate == null)
+                {
+                    throw new InvalidOperationException("The specified certificate could not be found in the store.");
+                }
 
-            // Then we use the symmetric key to decrypt the passphrase:
-            var decryptedPassphrase = DecryptSecret(keyFile.EncryptedPassphrase, decryptedKey, keyFile.IV);
+                // First we decrypt the symmetric key:
+                ProtectedBinary decryptedKey;
+                RSA rsa;
+                ECDsa ecdsa;
+                if ((rsa = fromStoreCertificate.GetRSAPrivateKey()) != null)
+                {
+                    decryptedKey = new ProtectedBinary(true, rsa.Decrypt(keyFile.EncryptedKey, RSAEncryptionPadding.OaepSHA256));
+                }
+                else if ((ecdsa = fromStoreCertificate.GetECDsaPrivateKey()) != null)
+                {
+                    // TODO:
+                    // https://stackoverflow.com/questions/47116611/how-can-i-encrypt-data-using-a-public-key-from-ecc-x509-certificate-in-net-fram
+                    // var ecdh = ECDiffieHellman.Create(ecdsa.ExportParameters(false));
+                    throw new NotSupportedException("Certificate's key type not supported.");
+                }
+                else
+                {
+                    throw new NotSupportedException("Certificate's key type not supported.");
+                }
 
-            return decryptedPassphrase;
+                // Then we use the symmetric key to decrypt the passphrase:
+                var decryptedPassphrase = DecryptSecret(keyFile.EncryptedPassphrase, decryptedKey, keyFile.IV);
+
+                return decryptedPassphrase;
+            }
         }
 
         public static X509Certificate2 LoadFromStore(X509Certificate2 certificate)
