@@ -47,40 +47,39 @@ internal static class CryptoHelpers
 
     public static ProtectedBinary DecryptPassphrase(CertificateShortcutProviderKey keyFile)
     {
-        using (var fromSourceCertificate = keyFile.ReadCertificate())
+        using var fromSourceCertificate = keyFile.ReadCertificate();
+
+        var fromStoreCertificate = LoadFromStore(fromSourceCertificate);
+
+        if (fromStoreCertificate == null)
         {
-            var fromStoreCertificate = LoadFromStore(fromSourceCertificate);
-
-            if (fromStoreCertificate == null)
-            {
-                throw new InvalidOperationException("The specified certificate could not be found in the store.");
-            }
-
-            // First we decrypt the symmetric key:
-            ProtectedBinary decryptedKey;
-            RSA rsa;
-            ECDsa ecdsa;
-            if ((rsa = fromStoreCertificate.GetRSAPrivateKey()) != null)
-            {
-                decryptedKey = new ProtectedBinary(true, rsa.Decrypt(keyFile.EncryptedKey, RSAEncryptionPadding.OaepSHA256));
-            }
-            else if ((ecdsa = fromStoreCertificate.GetECDsaPrivateKey()) != null)
-            {
-                // TODO:
-                // https://stackoverflow.com/questions/47116611/how-can-i-encrypt-data-using-a-public-key-from-ecc-x509-certificate-in-net-fram
-                // var ecdh = ECDiffieHellman.Create(ecdsa.ExportParameters(false));
-                throw new NotSupportedException("Certificate's key type not supported.");
-            }
-            else
-            {
-                throw new NotSupportedException("Certificate's key type not supported.");
-            }
-
-            // Then we use the symmetric key to decrypt the passphrase:
-            var decryptedPassphrase = DecryptSecret(keyFile.EncryptedPassphrase, decryptedKey, keyFile.IV);
-
-            return decryptedPassphrase;
+            throw new InvalidOperationException("The specified certificate could not be found in the store.");
         }
+
+        // First we decrypt the symmetric key:
+        ProtectedBinary decryptedKey;
+        RSA rsa;
+        ECDsa ecdsa;
+        if ((rsa = fromStoreCertificate.GetRSAPrivateKey()) != null)
+        {
+            decryptedKey = new ProtectedBinary(true, rsa.Decrypt(keyFile.EncryptedKey, RSAEncryptionPadding.OaepSHA256));
+        }
+        else if ((ecdsa = fromStoreCertificate.GetECDsaPrivateKey()) != null)
+        {
+            // TODO:
+            // https://stackoverflow.com/questions/47116611/how-can-i-encrypt-data-using-a-public-key-from-ecc-x509-certificate-in-net-fram
+            // var ecdh = ECDiffieHellman.Create(ecdsa.ExportParameters(false));
+            throw new NotSupportedException("Certificate's key type not supported.");
+        }
+        else
+        {
+            throw new NotSupportedException("Certificate's key type not supported.");
+        }
+
+        // Then we use the symmetric key to decrypt the passphrase:
+        var decryptedPassphrase = DecryptSecret(keyFile.EncryptedPassphrase, decryptedKey, keyFile.IV);
+
+        return decryptedPassphrase;
     }
 
     public static X509Certificate2 LoadFromStore(X509Certificate2 certificate)
@@ -98,38 +97,32 @@ internal static class CryptoHelpers
     private static byte[] EncryptSecret(ProtectedBinary secret, ProtectedBinary key, out byte[] iv)
     {
         iv = CryptoRandom.Instance.GetRandomBytes(16); // AES 256 uses 128bits blocks
-        using (var ms = new MemoryStream())
+        using var ms = new MemoryStream();
+        using (var encryptionStream = new StandardAesEngine().EncryptStream(ms, key.ReadData(), iv))
         {
-            using (var encryptionStream = new StandardAesEngine().EncryptStream(ms, key.ReadData(), iv))
-            {
-                MemUtil.Write(encryptionStream, secret.ReadData());
-            }
-            return ms.ToArray();
+            MemUtil.Write(encryptionStream, secret.ReadData());
         }
+        return ms.ToArray();
     }
 
     private static ProtectedBinary DecryptSecret(byte[] encryptedSecret, ProtectedBinary key, byte[] iv)
     {
-        using (var ms = new MemoryStream(encryptedSecret))
-        using (var decryptionStream = new StandardAesEngine().DecryptStream(ms, key.ReadData(), iv))
-        {
-            return new ProtectedBinary(true, ReadToEnd(decryptionStream));
-        }
+        using var ms = new MemoryStream(encryptedSecret);
+        using var decryptionStream = new StandardAesEngine().DecryptStream(ms, key.ReadData(), iv);
+        return new ProtectedBinary(true, ReadToEnd(decryptionStream));
     }
 
     private static byte[] ReadToEnd(Stream stream)
     {
         var buffer = new byte[32768];
-        using (var ms = new MemoryStream())
+        using var ms = new MemoryStream();
+        while (true)
         {
-            while (true)
-            {
-                int read = stream.Read(buffer, 0, buffer.Length);
-                if (read <= 0)
-                    return ms.ToArray();
-                else
-                    ms.Write(buffer, 0, read);
-            }
+            int read = stream.Read(buffer, 0, buffer.Length);
+            if (read <= 0)
+                return ms.ToArray();
+            else
+                ms.Write(buffer, 0, read);
         }
     }
 }

@@ -38,8 +38,10 @@ public sealed class CertificateShortcutKeyProvider : KeyProvider
 
             while (!File.Exists(keyFilePath))
             {
-                var ofd = new OpenFileDialogEx("Select your Certificate Shortcut Provider Key file.");
-                ofd.Filter = $"Certificate Shortcut Provider Key files (*{DefaultKeyExtension})|*{DefaultKeyExtension}|All files (*.*)|*.*";
+                var ofd = new OpenFileDialogEx("Select your Certificate Shortcut Provider Key file.")
+                {
+                    Filter = $"Certificate Shortcut Provider Key files (*{DefaultKeyExtension})|*{DefaultKeyExtension}|All files (*.*)|*.*"
+                };
                 if (ofd.ShowDialog() != DialogResult.OK)
                 {
                     return null;

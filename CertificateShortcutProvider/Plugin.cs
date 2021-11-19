@@ -8,7 +8,7 @@ namespace CertificateShortcutProvider;
 public sealed class CertificateShortcutProviderExt : Plugin
 {
     private IPluginHost _host = null;
-    private readonly CertificateShortcutKeyProvider _provider = new CertificateShortcutKeyProvider();
+    private readonly CertificateShortcutKeyProvider _provider = new();
 
     /// <summary>
     /// The <c>Initialize</c> method is called by KeePass when
@@ -52,8 +52,10 @@ public sealed class CertificateShortcutProviderExt : Plugin
     {
         if (t == PluginMenuType.Main)
         {
-            var tsmi = new ToolStripMenuItem();
-            tsmi.Text = "Initialize Certificate Shortcut Provider...";
+            var tsmi = new ToolStripMenuItem
+            {
+                Text = "Initialize Certificate Shortcut Provider..."
+            };
             tsmi.Click += OnOptionsClicked;
             return tsmi;
         }
@@ -71,9 +73,7 @@ public sealed class CertificateShortcutProviderExt : Plugin
 
         var keyFilePath = databasePath + CertificateShortcutKeyProvider.DefaultKeyExtension;
 
-        using (var form = new KeyCreationForm(keyFilePath))
-        {
-            form.ShowDialog();
-        }
+        using var form = new KeyCreationForm(keyFilePath);
+        form.ShowDialog();
     }
 }

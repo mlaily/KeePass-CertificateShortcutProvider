@@ -80,9 +80,11 @@ public partial class KeyCreationForm : Form
 
     private void browseButton_Click(object sender, EventArgs e)
     {
-        var sfd = new SaveFileDialogEx("Select a location for your new Certificate Shortcut Provider Key file.");
-        sfd.Filter = $"Certificate Shortcut Provider Key files (*{CertificateShortcutKeyProvider.DefaultKeyExtension})|*{CertificateShortcutKeyProvider.DefaultKeyExtension}|All files (*.*)|*.*";
-        sfd.FileName = keyFileLocationTextBox.Text;
+        var sfd = new SaveFileDialogEx("Select a location for your new Certificate Shortcut Provider Key file.")
+        {
+            Filter = $"Certificate Shortcut Provider Key files (*{CertificateShortcutKeyProvider.DefaultKeyExtension})|*{CertificateShortcutKeyProvider.DefaultKeyExtension}|All files (*.*)|*.*",
+            FileName = keyFileLocationTextBox.Text
+        };
         if (sfd.ShowDialog() == DialogResult.OK)
         {
             keyFileLocationTextBox.Text = sfd.FileName;

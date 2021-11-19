@@ -5,7 +5,6 @@ using System.Xml.Serialization;
 namespace CertificateShortcutProvider;
 
 [XmlType("CertificateShortcutProviderKey")]
-[SuppressMessage("Performance", "CA1819:Properties should not return arrays")]
 public class CertificateShortcutProviderKey
 {
     public const int CurrentVersion = 1;
@@ -40,5 +39,5 @@ public class CertificateShortcutProviderKey
         EncryptedPassphrase = encryptedPassphrase;
     }
 
-    public X509Certificate2 ReadCertificate() => new X509Certificate2(Certificate);
+    public X509Certificate2 ReadCertificate() => new(Certificate);
 }
