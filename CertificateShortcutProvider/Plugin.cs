@@ -1,12 +1,5 @@
 using KeePass.Plugins;
 using KeePassLib.Utility;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 // The namespace must be named like the DLL file without extension.
 namespace CertificateShortcutProvider;
