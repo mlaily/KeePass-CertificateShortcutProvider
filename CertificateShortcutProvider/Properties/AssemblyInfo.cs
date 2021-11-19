@@ -43,5 +43,5 @@ using System.Runtime.InteropServices;
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1050:Declare types in namespaces", Justification = "Unnecessary")]
 public static class Version
 {
-    public const string Number = "1.2.0.0";
+    public const string Number = "1.3.0.0";
 }
