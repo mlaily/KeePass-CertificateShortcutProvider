@@ -50,8 +50,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CertificateShortcutProvider.cs" />
-    <Compile Include="CertificateShortcutProviderExt.cs" />
+    <Compile Include="Provider.cs" />
+    <Compile Include="Plugin.cs" />
     <Compile Include="CertificateShortcutProviderKey.cs" />
     <Compile Include="CryptoHelpers.cs" />
     <Compile Include="KeyCreationForm.cs">

@@ -12,8 +12,7 @@ using System.Windows.Forms;
 
 namespace CertificateShortcutProvider
 {
-    [SuppressMessage("Naming", "CA1724:Type names should not match namespaces")]
-    public sealed class CertificateShortcutProvider : KeyProvider
+    public sealed class CertificateShortcutKeyProvider : KeyProvider
     {
         public const string DefaultKeyExtension = ".cspkey";
 
