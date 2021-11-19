@@ -122,3 +122,4 @@ dotnet_diagnostic.CA1303.severity = none
 
 # IDE0055: Fix formatting
 dotnet_diagnostic.IDE0055.severity = warning
+csharp_style_namespace_declarations=file_scoped:silent
