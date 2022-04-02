@@ -10,11 +10,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Certificate Shortcut Provider")]
-[assembly: AssemblyDescription("Provide a way to open the KeePass key-chain with an X509 certificate.")]
+[assembly: AssemblyDescription("Provides a way to open the KeePass key-chain with an X509 certificate.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Melvyn Laïly")]
 [assembly: AssemblyProduct("KeePass Plugin")]
-[assembly: AssemblyCopyright("Copyright © Melvyn Laïly 2019")]
+[assembly: AssemblyCopyright("Copyright © Melvyn Laïly 2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -43,5 +43,5 @@ using System.Runtime.InteropServices;
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1050:Declare types in namespaces", Justification = "Unnecessary")]
 public static class Version
 {
-    public const string Number = "1.3.0.0";
+    public const string Number = "1.3.1.0";
 }
