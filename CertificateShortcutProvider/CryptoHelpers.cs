@@ -7,9 +7,22 @@ using KeePassLib.Utility;
 
 namespace CertificateShortcutProvider;
 
-internal static class CryptoHelpers
+public record AllowedRSAEncryptionPadding(RSAEncryptionPadding Value, string Name, string DisplayName)
 {
-    public static CertificateShortcutProviderKey EncryptPassphrase(X509Certificate2 certificate, ProtectedString passphrase)
+    public static AllowedRSAEncryptionPadding[] List { get; } =
+        new[]
+        {
+            new AllowedRSAEncryptionPadding(RSAEncryptionPadding.OaepSHA256, "OAEPSHA256", "OAEP SHA256 (Recommended)"),
+            new AllowedRSAEncryptionPadding(RSAEncryptionPadding.Pkcs1, "PKCS1", "PKCS #1 (Legacy)")
+        };
+    public static AllowedRSAEncryptionPadding Default => List[0];
+
+    public static AllowedRSAEncryptionPadding GetFromNameOrDefault(string name) => List.SingleOrDefault(x => x.Name == name) ?? Default;
+}
+
+public static class CryptoHelpers
+{
+    public static XmlCertificateShortcutProviderKey EncryptPassphrase(X509Certificate2 certificate, ProtectedString passphrase, AllowedRSAEncryptionPadding rsaEncryptionPadding = null)
     {
         // Instead of directly encrypting the passphrase with the certificate,
         // we use an intermediate random symmetric key.
@@ -24,10 +37,11 @@ internal static class CryptoHelpers
         // now we asymmetrically encrypt the random key.
         byte[] encryptedRandomKey;
         RSA rsa;
+        var rsaPadding = rsaEncryptionPadding ?? AllowedRSAEncryptionPadding.Default;
         ECDsa ecdsa;
         if ((rsa = certificate.GetRSAPublicKey()) != null)
         {
-            encryptedRandomKey = rsa.Encrypt(randomKey.ReadData(), RSAEncryptionPadding.OaepSHA256);
+            encryptedRandomKey = rsa.Encrypt(randomKey.ReadData(), rsaPadding.Value);
         }
         else if ((ecdsa = certificate.GetECDsaPublicKey()) != null)
         {
@@ -41,11 +55,11 @@ internal static class CryptoHelpers
             throw new NotSupportedException("Certificate's key type not supported.");
         }
 
-        var result = new CertificateShortcutProviderKey(certificate, encryptedRandomKey, iv, encryptedPassphrase);
+        var result = new XmlCertificateShortcutProviderKey(certificate, encryptedRandomKey, iv, encryptedPassphrase, rsaPadding.Name);
         return result;
     }
 
-    public static ProtectedBinary DecryptPassphrase(CertificateShortcutProviderKey keyFile)
+    public static ProtectedBinary DecryptPassphrase(XmlCertificateShortcutProviderKey keyFile)
     {
         using var fromSourceCertificate = keyFile.ReadCertificate();
 
@@ -62,7 +76,7 @@ internal static class CryptoHelpers
         ECDsa ecdsa;
         if ((rsa = fromStoreCertificate.GetRSAPrivateKey()) != null)
         {
-            decryptedKey = new ProtectedBinary(true, rsa.Decrypt(keyFile.EncryptedKey, RSAEncryptionPadding.OaepSHA256));
+            decryptedKey = new ProtectedBinary(true, rsa.Decrypt(keyFile.EncryptedKey, keyFile.RSAEncryptionPadding.Value));
         }
         else if ((ecdsa = fromStoreCertificate.GetECDsaPrivateKey()) != null)
         {

@@ -15,4 +15,9 @@
     <Reference Include="System.Security" />
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Update="KeyCreationAdvancedSettingsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+  </ItemGroup>
 </Project>

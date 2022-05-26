@@ -5,9 +5,9 @@ using System.Xml.Serialization;
 namespace CertificateShortcutProvider;
 
 [XmlType("CertificateShortcutProviderKey")]
-public class CertificateShortcutProviderKey
+public class XmlCertificateShortcutProviderKey
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     [XmlAttribute]
     public int Version { get; set; }
@@ -24,8 +24,10 @@ public class CertificateShortcutProviderKey
     /// </summary>
     public byte[] EncryptedPassphrase { get; set; }
 
-    public CertificateShortcutProviderKey() { }
-    public CertificateShortcutProviderKey(X509Certificate2 certificate, byte[] encryptedKey, byte[] iv, byte[] encryptedPassphrase)
+    public string RSAEncryptionPaddingName { get; set; }
+
+    public XmlCertificateShortcutProviderKey() { }
+    public XmlCertificateShortcutProviderKey(X509Certificate2 certificate, byte[] encryptedKey, byte[] iv, byte[] encryptedPassphrase, string rsaEncryptionPaddingName)
     {
         if (certificate == null) throw new ArgumentNullException(nameof(certificate));
 
@@ -37,7 +39,10 @@ public class CertificateShortcutProviderKey
         EncryptedKey = encryptedKey;
         IV = iv;
         EncryptedPassphrase = encryptedPassphrase;
+
+        RSAEncryptionPaddingName = rsaEncryptionPaddingName;
     }
 
     public X509Certificate2 ReadCertificate() => new(Certificate);
+    public AllowedRSAEncryptionPadding RSAEncryptionPadding => AllowedRSAEncryptionPadding.GetFromNameOrDefault(RSAEncryptionPaddingName);
 }

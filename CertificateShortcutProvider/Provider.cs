@@ -24,7 +24,7 @@ public sealed class CertificateShortcutKeyProvider : KeyProvider
         // The key file is expected to be next to the database by default:
         var keyFilePath = UrlUtil.StripExtension(ctx.DatabasePath) + DefaultKeyExtension;
 
-        CertificateShortcutProviderKey cspKey;
+        XmlCertificateShortcutProviderKey cspKey;
 
         if (ctx.CreatingNewKey)
         {
@@ -54,7 +54,7 @@ public sealed class CertificateShortcutKeyProvider : KeyProvider
 
             using (var fs = new FileStream(keyFilePath, FileMode.Open, FileAccess.Read, FileShare.Read | FileShare.Delete))
             {
-                cspKey = XmlUtilEx.Deserialize<CertificateShortcutProviderKey>(fs);
+                cspKey = XmlUtilEx.Deserialize<XmlCertificateShortcutProviderKey>(fs);
             }
 
             var secretKey = CryptoHelpers.DecryptPassphrase(cspKey);

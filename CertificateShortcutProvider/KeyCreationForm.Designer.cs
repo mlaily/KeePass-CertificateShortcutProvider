@@ -29,6 +29,7 @@ namespace CertificateShortcutProvider
             this.keyFileLocationTextBox = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.browseButton = new System.Windows.Forms.Button();
+            this.advancedSettingsButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // secureTextBox
@@ -44,7 +45,7 @@ namespace CertificateShortcutProvider
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(12, 16);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(318, 143);
+            this.label1.Size = new System.Drawing.Size(403, 117);
             this.label1.TabIndex = 1;
             this.label1.Text = resources.GetString("label1.Text");
             // 
@@ -73,7 +74,8 @@ namespace CertificateShortcutProvider
             // 
             // saveFileButton
             // 
-            this.saveFileButton.Location = new System.Drawing.Point(271, 341);
+            this.saveFileButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.saveFileButton.Location = new System.Drawing.Point(271, 363);
             this.saveFileButton.Name = "saveFileButton";
             this.saveFileButton.Size = new System.Drawing.Size(204, 23);
             this.saveFileButton.TabIndex = 8;
@@ -135,11 +137,23 @@ namespace CertificateShortcutProvider
             this.browseButton.UseVisualStyleBackColor = true;
             this.browseButton.Click += new System.EventHandler(this.browseButton_Click);
             // 
+            // advancedSettingsButton
+            // 
+            this.advancedSettingsButton.Location = new System.Drawing.Point(15, 333);
+            this.advancedSettingsButton.Name = "advancedSettingsButton";
+            this.advancedSettingsButton.Size = new System.Drawing.Size(124, 23);
+            this.advancedSettingsButton.TabIndex = 17;
+            this.advancedSettingsButton.Text = "Advanced settings...";
+            this.advancedSettingsButton.UseVisualStyleBackColor = true;
+            this.advancedSettingsButton.Click += new System.EventHandler(this.advancedSettingsButton_Click);
+            // 
             // KeyCreationForm
             // 
+            this.AcceptButton = this.saveFileButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(487, 376);
+            this.ClientSize = new System.Drawing.Size(487, 398);
+            this.Controls.Add(this.advancedSettingsButton);
             this.Controls.Add(this.browseButton);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.keyFileLocationTextBox);
@@ -174,5 +188,6 @@ namespace CertificateShortcutProvider
         private System.Windows.Forms.TextBox keyFileLocationTextBox;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button browseButton;
+        private Button advancedSettingsButton;
     }
 }

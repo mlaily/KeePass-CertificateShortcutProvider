@@ -1,4 +1,5 @@
 using System.Data;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using KeePass.App;
 using KeePass.UI;
@@ -10,6 +11,7 @@ public partial class KeyCreationForm : Form
 {
     private bool _initializing = true;
     private X509Certificate2 _selectedCertificate;
+    private AllowedRSAEncryptionPadding _rsaEncryptionPadding = AllowedRSAEncryptionPadding.Default;
 
     public KeyCreationForm(string keyFileDefaultLocation)
     {
@@ -91,6 +93,17 @@ public partial class KeyCreationForm : Form
         }
     }
 
+    private void advancedSettingsButton_Click(object sender, EventArgs e)
+    {
+        var form = new KeyCreationAdvancedSettingsForm();
+        var dialogResult = form.ShowDialog();
+        var selectedPadding = form.SelectedRSAEncryptionPadding;
+        if (dialogResult == DialogResult.OK && selectedPadding != null)
+        {
+            _rsaEncryptionPadding = selectedPadding;
+        }
+    }
+
     private void saveFileButton_Click(object sender, EventArgs e)
     {
         if (secureTextBox.TextLength <= 0 || _selectedCertificate == null || string.IsNullOrWhiteSpace(keyFileLocationTextBox.Text))
@@ -109,7 +122,7 @@ public partial class KeyCreationForm : Form
             }
         }
 
-        var cspKey = CryptoHelpers.EncryptPassphrase(_selectedCertificate, secureTextBox.TextEx);
+        var cspKey = CryptoHelpers.EncryptPassphrase(_selectedCertificate, secureTextBox.TextEx, _rsaEncryptionPadding);
 
         using (var fs = new FileStream(keyFileLocationTextBox.Text, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.Read))
         {
